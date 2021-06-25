@@ -35,7 +35,10 @@ def post():  # completed
             line_no += 1
             data_list.append(d)
 
-        print (data_list) 
+        # print (data_list) 
+        if(len(data_list) == 0):
+            raise Exception("Emply file is not allowed to be processed")
+        
         cursor = conn.cursor()
         #pre-processing
         pre_process = 'DELETE FROM dm.dm_textfile WHERE compid = %s AND filetype = %s;'
@@ -62,5 +65,35 @@ def post():  # completed
         
         return ({"message": f'oops!, Something went wrong!'})
 
+@app.route('/file', methods=['GET'])
+def get():
+    try: 
+        compid = request.args.get('compid')
+        filetype = request.args.get('filetype')
+        
+        cursor = conn.cursor()
+        sql = 'SELECT * FROM dm.dm_textfile WHERE compid = %s AND filetype = %s Order by lineno'
+        cursor.execute(sql, [compid, filetype])
+        records = cursor.fetchall()
+        
+        file = []
+        for rec in records:
+            encoded_string = base64.b64decode(rec[3])
+            file.append(encoded_string.decode('utf-8'))
+             
+        # print (file) 
+        conn.commit()   # commit the changes
+        cursor.close()
+        result = {"compid": compid, "filetype":filetype, "file": file}
+        return ({"result": result, "message": f'components updated Succesfully'})
+
+    except Exception as err:
+        print(err)
+        cursor = conn.cursor()
+        cursor.execute("ROLLBACK")
+        conn.commit()
+        
+        return ({"message": f'oops!, Something went wrong!'})
+    
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
