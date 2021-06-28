@@ -1,5 +1,5 @@
 import os
-import base64
+import json
 
 import psycopg2
 from flask import Flask, request
@@ -23,39 +23,31 @@ def post():  # completed
     try: 
         input_data = request.form
         
-        file = input_data.get('file')
+        file = json.loads(input_data.get('file'))
         compid = input_data.get('compid')
         filetype = input_data.get('filetype')
         
-        encoded_bytes = base64.encodebytes(bytes(file, 'utf-8'))
         line_no = 1
         data_list = []
-        for line in encoded_bytes.splitlines():
-            d = (compid, filetype, line_no, line.decode('utf-8')) # this will be changed
+        for line in file:
+            d = (compid, filetype, line_no, line)
             line_no += 1
             data_list.append(d)
 
-        # print (data_list) 
-        if(len(data_list) == 0):
-            raise Exception("Emply file is not allowed to be processed")
-        
         cursor = conn.cursor()
         #pre-processing
         pre_process = 'DELETE FROM dm.dm_textfile WHERE compid = %s AND filetype = %s;'
         cursor.execute(pre_process, [compid, filetype])
         
-        records_list_template = ','.join(['%s'] * len(data_list))
-        sql = 'INSERT INTO dm.dm_textfile(compid, filetype, lineno, base64str) VALUES {}'.format(records_list_template)
-        cursor.execute(sql, data_list)
-        rows_inserted = cursor.rowcount
+        if len(data_list) > 0:
+            records_list_template = ','.join(['%s'] * len(data_list))
+            sql = 'INSERT INTO dm.dm_textfile(compid, filetype, lineno, base64str) VALUES {}'.format(records_list_template)
+            cursor.execute(sql, data_list)
 
         conn.commit()   # commit the changes
         cursor.close()
         
-        if rows_inserted > 0:
-            return ({"message": f'components updated Succesfully'})
-        else:
-            return ({"message": f'oops!, Something went wrong!'})
+        return ({"message": f'components updated Succesfully'})
 
     except Exception as err:
         print(err)
@@ -78,8 +70,7 @@ def get():
         
         file = []
         for rec in records:
-            encoded_string = base64.b64decode(rec[3])
-            file.append(encoded_string.decode('utf-8'))
+            file.append(rec[3])
              
         # print (file) 
         conn.commit()   # commit the changes
