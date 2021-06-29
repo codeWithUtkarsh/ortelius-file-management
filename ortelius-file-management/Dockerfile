@@ -15,7 +15,6 @@ RUN apk add --no-cache curl=7.67.0-r3 busybox=1.31.1-r10 musl-utils=1.1.24-r3 ss
     # Uninstall pip to remove CVEs
     python -m pip uninstall -y pip setuptools; \
     # Scan for vulnerabilities using trivy
-    RUN apt-get update && apt-get install -y \
     curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin; \
     trivy fs -f json -o ${TRIVY_OUTPUT} --no-progress /; \
     rm -r /usr/local/bin/trivy;
