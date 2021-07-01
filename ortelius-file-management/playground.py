@@ -1,7 +1,7 @@
 import requests
 import json
 
-API_ENDPOINT = 'http://192.168.225.51:5000/file'
+API_ENDPOINT = 'http://localhost:5000/ms/textfile'
 
 #request endpoint
 def test_post():
