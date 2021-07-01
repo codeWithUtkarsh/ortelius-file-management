@@ -19,7 +19,7 @@ db_port = os.getenv("DB_PORT", "5432")
 conn = psycopg2.connect(host=db_host, database=db_name, user=db_user, password=db_pass, port=db_port)
 
 class ComponentTextfile(Resource):
-    def post(cls):
+    def post(self):
         try: 
             input_data = request.form
             
@@ -57,7 +57,7 @@ class ComponentTextfile(Resource):
             
             return ({"message": f'oops!, Something went wrong!'})
     
-    def get(cls):
+    def get(self):
         try: 
             compid = request.args.get('compid')
             filetype = request.args.get('filetype')
